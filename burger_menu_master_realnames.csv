@@ -1,0 +1,91 @@
+﻿menu_id,name_ko,name_en,category,subcategory,base_menu_id,price_krw,size,kcal,is_set,is_burger,is_side,is_drink,is_dessert,is_beef,is_chicken,is_pork,is_fish,is_spicy,is_vegan,is_vegetarian,is_cold_drink,is_carbonated,is_sugar_free,is_caffeine,is_popular,is_limited,combo_allowed,tags,display_order
+B001,스테디 와퍼,Steady Whopper,BURGER,PREMIUM_BURGER,,6900,REGULAR,720,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,True,False,True,"스테디 와퍼,버거",10
+B002,불고기 클래식 버거,Bulgogi Classic Burger,BURGER,CLASSIC_BURGER,,5200,REGULAR,560,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,"불고기 클래식 버거,버거",20
+B003,더블 치즈버거,Double Cheeseburger,BURGER,CLASSIC_BURGER,,5900,REGULAR,610,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,"더블 치즈버거,버거",30
+B004,크리스피 치킨버거,Crispy Chicken Burger,BURGER,CHICKEN_BURGER,,5800,REGULAR,640,False,True,False,False,False,False,True,False,False,False,False,False,False,False,False,False,True,False,True,"크리스피 치킨버거,버거",40
+B005,피쉬 타르타르 버거,Fish Tartar Burger,BURGER,FISH_BURGER,,5500,REGULAR,520,False,True,False,False,False,False,False,False,True,False,False,False,False,False,False,False,True,False,True,"피쉬 타르타르 버거,버거",50
+B006,그릴드 베지 버거,Grilled Veggie Burger,BURGER,VEGGIE_BURGER,,5800,REGULAR,480,False,True,False,False,False,False,False,False,False,False,False,True,False,False,False,False,True,False,True,"그릴드 베지 버거,버거",60
+B007,스모키 베이컨 버거,Smoky Bacon Burger,BURGER,PREMIUM_BURGER,,7500,REGULAR,820,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,"스모키 베이컨 버거,버거",70
+B008,머쉬룸 크림 버거,Mushroom Cream Burger,BURGER,PREMIUM_BURGER,,7300,REGULAR,780,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,"머쉬룸 크림 버거,버거",80
+B009,갈릭 스테이크 버거,Garlic Steak Burger,BURGER,PREMIUM_BURGER,,8300,REGULAR,880,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,"갈릭 스테이크 버거,버거",90
+B010,트리플 치즈 버거,Triple Cheese Burger,BURGER,PREMIUM_BURGER,,8100,REGULAR,860,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,"트리플 치즈 버거,버거",100
+B101,클래식 라이트 버거,Classic Light Burger,BURGER,VALUE_BURGER,,4100,REGULAR,485,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,True,"가성비,클래식 라이트 버거",151
+B102,싱글 치즈버거,Single Cheeseburger,BURGER,VALUE_BURGER,,4300,REGULAR,500,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,True,"가성비,싱글 치즈버거",152
+B103,에그 불고기 버거,Egg Bulgogi Burger,BURGER,VALUE_BURGER,,4500,REGULAR,515,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,True,"가성비,에그 불고기 버거",153
+B104,어니언 바비큐 버거,Onion BBQ Burger,BURGER,VALUE_BURGER,,4700,REGULAR,530,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,True,"가성비,어니언 바비큐 버거",154
+B105,쉬림프 타르타르 버거,Shrimp Tartar Burger,BURGER,VALUE_BURGER,,4900,REGULAR,545,False,True,False,False,False,False,False,False,True,False,False,False,False,False,False,False,False,False,True,"가성비,쉬림프 타르타르 버거",155
+BL001,할라피뇨 치즈 버거,Jalapeno Cheese Burger,BURGER,LIMITED_SPICY_BURGER,,7400,REGULAR,715,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,할라피뇨 치즈 버거",201
+BL002,화이어 치킨버거,Fire Chicken Burger,BURGER,LIMITED_SPICY_BURGER,,7600,REGULAR,730,False,True,False,False,False,False,True,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,화이어 치킨버거",202
+BL003,불맛 직화 버거,Charcoal Flame Burger,BURGER,LIMITED_SPICY_BURGER,,7800,REGULAR,745,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,불맛 직화 버거",203
+BL004,레드핫 스테이크 버거,Red Hot Steak Burger,BURGER,LIMITED_SPICY_BURGER,,8000,REGULAR,760,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,레드핫 스테이크 버거",204
+BL005,불닭 마요 치킨버거,Hot Chicken Mayo Burger,BURGER,LIMITED_SPICY_BURGER,,8200,REGULAR,775,False,True,False,False,False,False,True,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,불닭 마요 치킨버거",205
+BL006,스모키 칠리 버거,Smoky Chili Burger,BURGER,LIMITED_SPICY_BURGER,,8400,REGULAR,790,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,스모키 칠리 버거",206
+BL007,크레이지 스파이시 버거,Crazy Spicy Burger,BURGER,LIMITED_SPICY_BURGER,,8600,REGULAR,805,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,크레이지 스파이시 버거",207
+BL008,고스트 페퍼 버거,Ghost Pepper Burger,BURGER,LIMITED_SPICY_BURGER,,8800,REGULAR,820,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,고스트 페퍼 버거",208
+BL009,와사비 스파이시 버거,Wasabi Spicy Burger,BURGER,LIMITED_SPICY_BURGER,,9000,REGULAR,835,False,True,False,False,False,True,False,False,False,True,False,False,False,False,False,False,False,True,True,"한정,매운,와사비 스파이시 버거",209
+BL010,매운 쉬림프 버거,Spicy Shrimp Burger,BURGER,LIMITED_SPICY_BURGER,,9200,REGULAR,850,False,True,False,False,False,False,False,False,True,True,False,False,False,False,False,False,False,True,True,"한정,매운,매운 쉬림프 버거",210
+S001,스테디 와퍼 세트,Steady Whopper Set,SET,COMBO_SET,B001,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"스테디 와퍼,세트",300
+S002,불고기 클래식 버거 세트,Bulgogi Classic Burger Set,SET,COMBO_SET,B002,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"불고기 클래식 버거,세트",301
+S003,더블 치즈버거 세트,Double Cheeseburger Set,SET,COMBO_SET,B003,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"더블 치즈버거,세트",302
+S004,크리스피 치킨버거 세트,Crispy Chicken Burger Set,SET,COMBO_SET,B004,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"크리스피 치킨버거,세트",303
+S005,피쉬 타르타르 버거 세트,Fish Tartar Burger Set,SET,COMBO_SET,B005,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"피쉬 타르타르 버거,세트",304
+S006,그릴드 베지 버거 세트,Grilled Veggie Burger Set,SET,COMBO_SET,B006,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"그릴드 베지 버거,세트",305
+S007,스모키 베이컨 버거 세트,Smoky Bacon Burger Set,SET,COMBO_SET,B007,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"스모키 베이컨 버거,세트",306
+S008,머쉬룸 크림 버거 세트,Mushroom Cream Burger Set,SET,COMBO_SET,B008,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"머쉬룸 크림 버거,세트",307
+S009,갈릭 스테이크 버거 세트,Garlic Steak Burger Set,SET,COMBO_SET,B009,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"갈릭 스테이크 버거,세트",308
+S010,트리플 치즈 버거 세트,Triple Cheese Burger Set,SET,COMBO_SET,B010,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"트리플 치즈 버거,세트",309
+S101,클래식 라이트 버거 세트,Classic Light Burger Set,SET,COMBO_SET,B101,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"클래식 라이트 버거,세트",310
+S102,싱글 치즈버거 세트,Single Cheeseburger Set,SET,COMBO_SET,B102,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"싱글 치즈버거,세트",311
+S103,에그 불고기 버거 세트,Egg Bulgogi Burger Set,SET,COMBO_SET,B103,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"에그 불고기 버거,세트",312
+S104,어니언 바비큐 버거 세트,Onion BBQ Burger Set,SET,COMBO_SET,B104,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"어니언 바비큐 버거,세트",313
+S105,쉬림프 타르타르 버거 세트,Shrimp Tartar Burger Set,SET,COMBO_SET,B105,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"쉬림프 타르타르 버거,세트",314
+SL001,할라피뇨 치즈 버거 세트,Jalapeno Cheese Burger Set,SET,COMBO_SET,BL001,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"할라피뇨 치즈 버거,세트",315
+SL002,화이어 치킨버거 세트,Fire Chicken Burger Set,SET,COMBO_SET,BL002,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"화이어 치킨버거,세트",316
+SL003,불맛 직화 버거 세트,Charcoal Flame Burger Set,SET,COMBO_SET,BL003,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"불맛 직화 버거,세트",317
+SL004,레드핫 스테이크 버거 세트,Red Hot Steak Burger Set,SET,COMBO_SET,BL004,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"레드핫 스테이크 버거,세트",318
+SL005,불닭 마요 치킨버거 세트,Hot Chicken Mayo Burger Set,SET,COMBO_SET,BL005,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"불닭 마요 치킨버거,세트",319
+SL006,스모키 칠리 버거 세트,Smoky Chili Burger Set,SET,COMBO_SET,BL006,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"스모키 칠리 버거,세트",320
+SL007,크레이지 스파이시 버거 세트,Crazy Spicy Burger Set,SET,COMBO_SET,BL007,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"크레이지 스파이시 버거,세트",321
+SL008,고스트 페퍼 버거 세트,Ghost Pepper Burger Set,SET,COMBO_SET,BL008,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"고스트 페퍼 버거,세트",322
+SL009,와사비 스파이시 버거 세트,Wasabi Spicy Burger Set,SET,COMBO_SET,BL009,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"와사비 스파이시 버거,세트",323
+SL010,매운 쉬림프 버거 세트,Spicy Shrimp Burger Set,SET,COMBO_SET,BL010,9000,REGULAR,950,True,False,False,False,False,,,,,,,,False,False,False,False,True,False,True,"매운 쉬림프 버거,세트",324
+SD201,프렌치프라이 (R),French Fries (R),SIDE,FRIES,,2800,REGULAR,320,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"프렌치프라이 (R),사이드",410
+SD202,프렌치프라이 (L),French Fries (L),SIDE,FRIES,,3300,LARGE,420,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"프렌치프라이 (L),사이드",411
+SD203,치킨너겟 6조각,Chicken Nuggets 6pcs,SIDE,CHICKEN_SIDE,,3500,ONE_SIZE,410,False,False,True,False,False,False,True,False,False,False,False,False,False,False,False,False,True,False,True,"치킨너겟 6조각,사이드",412
+SD204,어니언 링,Onion Rings,SIDE,ONION_RING,,3200,ONE_SIZE,360,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"어니언 링,사이드",413
+SD205,코울슬로,Coleslaw,SIDE,SALAD,,2500,ONE_SIZE,150,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"코울슬로,사이드",414
+SD206,치즈 프라이,Cheese Fries,SIDE,FRIES,,3800,ONE_SIZE,430,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"치즈 프라이,사이드",415
+SD207,칠리 치즈 프라이,Chili Cheese Fries,SIDE,FRIES,,4200,ONE_SIZE,480,False,False,True,False,False,False,False,False,False,True,False,False,False,False,False,False,True,False,True,"칠리 치즈 프라이,사이드",416
+SD208,모짜렐라 스틱 4조각,Mozzarella Sticks 4pcs,SIDE,CHEESE_SIDE,,3700,ONE_SIZE,390,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"모짜렐라 스틱 4조각,사이드",417
+SD209,콘 샐러드,Corn Salad,SIDE,SALAD,,2600,ONE_SIZE,140,False,False,True,False,False,False,False,False,False,False,False,True,False,False,False,False,True,False,True,"콘 샐러드,사이드",418
+SD210,갈릭 브레드,Garlic Bread,SIDE,BREAD,,2900,ONE_SIZE,260,False,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,"갈릭 브레드,사이드",419
+DR001,콜라 (R),Cola (R),DRINK,SOFT_DRINK,,2200,REGULAR,150,False,False,False,True,False,False,False,False,False,False,True,True,True,True,False,False,True,False,True,"콜라,음료",500
+DR002,콜라 (L),Cola (L),DRINK,SOFT_DRINK,,2700,LARGE,150,False,False,False,True,False,False,False,False,False,False,True,True,True,True,False,False,True,False,True,"콜라,음료",501
+DR003,콜라 제로 (R),Cola Zero (R),DRINK,SOFT_DRINK,,2200,REGULAR,10,False,False,False,True,False,False,False,False,False,False,True,True,True,True,True,True,True,False,True,"콜라 제로,음료",502
+DR004,콜라 제로 (L),Cola Zero (L),DRINK,SOFT_DRINK,,2700,LARGE,10,False,False,False,True,False,False,False,False,False,False,True,True,True,True,True,True,True,False,True,"콜라 제로,음료",503
+DR005,사이다 (R),Lemon Soda (R),DRINK,SOFT_DRINK,,2200,REGULAR,150,False,False,False,True,False,False,False,False,False,False,True,True,True,True,False,False,True,False,True,"사이다,음료",504
+DR006,사이다 (L),Lemon Soda (L),DRINK,SOFT_DRINK,,2700,LARGE,150,False,False,False,True,False,False,False,False,False,False,True,True,True,True,False,False,True,False,True,"사이다,음료",505
+DR007,오렌지 주스 (R),Orange Juice (R),DRINK,JUICE,,2200,REGULAR,150,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,False,True,False,True,"오렌지 주스,음료",506
+DR008,오렌지 주스 (L),Orange Juice (L),DRINK,JUICE,,2700,LARGE,150,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,False,True,False,True,"오렌지 주스,음료",507
+DR009,사과 주스 (R),Apple Juice (R),DRINK,JUICE,,2200,REGULAR,150,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,False,True,False,True,"사과 주스,음료",508
+DR010,사과 주스 (L),Apple Juice (L),DRINK,JUICE,,2700,LARGE,150,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,False,True,False,True,"사과 주스,음료",509
+DR011,아이스 아메리카노 (R),Iced Americano (R),DRINK,COFFEE,,2200,REGULAR,10,False,False,False,True,False,False,False,False,False,False,True,True,True,False,False,True,True,False,True,"아이스 아메리카노,음료",510
+DR012,아이스 아메리카노 (L),Iced Americano (L),DRINK,COFFEE,,2700,LARGE,10,False,False,False,True,False,False,False,False,False,False,True,True,True,False,False,True,True,False,True,"아이스 아메리카노,음료",511
+DR013,핫 아메리카노 (R),Hot Americano (R),DRINK,COFFEE,,2200,REGULAR,10,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,True,False,True,"핫 아메리카노,음료",512
+DR014,핫 아메리카노 (L),Hot Americano (L),DRINK,COFFEE,,2700,LARGE,10,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,True,False,True,"핫 아메리카노,음료",513
+DR015,카페 라떼 (R),Cafe Latte (R),DRINK,COFFEE,,2200,REGULAR,10,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,True,False,True,"카페 라떼,음료",514
+DR016,카페 라떼 (L),Cafe Latte (L),DRINK,COFFEE,,2700,LARGE,10,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,True,False,True,"카페 라떼,음료",515
+DR017,아이스 카페 라떼 (R),Iced Cafe Latte (R),DRINK,COFFEE,,2200,REGULAR,10,False,False,False,True,False,False,False,False,False,False,True,True,True,False,False,True,True,False,True,"아이스 카페 라떼,음료",516
+DR018,아이스 카페 라떼 (L),Iced Cafe Latte (L),DRINK,COFFEE,,2700,LARGE,10,False,False,False,True,False,False,False,False,False,False,True,True,True,False,False,True,True,False,True,"아이스 카페 라떼,음료",517
+DR019,아이스 티 (R),Iced Tea (R),DRINK,JUICE,,2200,REGULAR,150,False,False,False,True,False,False,False,False,False,False,True,True,True,False,False,False,True,False,True,"아이스 티,음료",518
+DR020,아이스 티 (L),Iced Tea (L),DRINK,JUICE,,2700,LARGE,150,False,False,False,True,False,False,False,False,False,False,True,True,True,False,False,False,True,False,True,"아이스 티,음료",519
+DS001,소프트 아이스크림,Soft Ice Cream,DESSERT,ICE_CREAM,,2000,ONE_SIZE,190,False,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,False,True,"소프트 아이스크림,디저트",600
+DS002,초코 선데,Choco Sundae,DESSERT,SUNDAE,,2700,ONE_SIZE,260,False,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,False,True,"초코 선데,디저트",601
+DS003,애플 파이,Apple Pie,DESSERT,PASTRY,,2300,ONE_SIZE,230,False,False,False,False,True,False,False,False,False,False,False,False,True,False,False,False,True,False,True,"애플 파이,디저트",602
+DS004,딸기 선데,Strawberry Sundae,DESSERT,SUNDAE,,2700,ONE_SIZE,260,False,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,False,True,"딸기 선데,디저트",603
+DS005,초코 브라우니,Chocolate Brownie,DESSERT,CAKE,,2900,ONE_SIZE,280,False,False,False,False,True,False,False,False,False,False,False,False,True,False,False,False,True,False,True,"초코 브라우니,디저트",604
+DS006,치즈 케이크,Cheesecake,DESSERT,CAKE,,3200,ONE_SIZE,300,False,False,False,False,True,False,False,False,False,False,False,False,True,False,False,False,True,False,True,"치즈 케이크,디저트",605
+DS007,쿠키 2개,Cookies 2pcs,DESSERT,COOKIE,,2200,ONE_SIZE,260,False,False,False,False,True,False,False,False,False,False,False,False,True,False,False,False,True,False,True,"쿠키 2개,디저트",606
+DS008,아이스 초코,Iced Choco,DESSERT,DRINK_DESSERT,,3200,ONE_SIZE,330,False,False,False,False,True,False,False,False,False,False,False,False,True,False,False,False,True,False,True,"아이스 초코,디저트",607
+DS009,밀크셰이크 바닐라,Vanilla Milkshake,DESSERT,SHAKE,,3500,ONE_SIZE,390,False,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,False,True,"밀크셰이크 바닐라,디저트",608
+DS010,밀크셰이크 초코,Chocolate Milkshake,DESSERT,SHAKE,,3500,ONE_SIZE,420,False,False,False,False,True,False,False,False,False,False,False,True,True,False,False,False,True,False,True,"밀크셰이크 초코,디저트",609

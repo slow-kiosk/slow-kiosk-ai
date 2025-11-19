@@ -1,27 +1,43 @@
+# app/main.py
+import os
+
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+from dotenv import load_dotenv
 
 from .models import AnalyzeRequest, AnalyzeResponse
-from .llm_client import analyze_with_llm
+from .llm_client import call_llm
 
+# .env 읽기 (OPENAI_API_KEY, OPENAI_MODEL 등)
+load_dotenv()
 
 app = FastAPI(
     title="Slow Kiosk AI Service",
-    description="키오스크 주문 LLM 백엔드 템플릿 (Python + FastAPI)",
-    version="0.1.0",
+    version="0.2.0",
+    description="키오스크 주문 LLM 백엔드 (Python + FastAPI, 재료/커스터마이즈 지원)",
+)
+
+# CORS (로컬 프론트/백 테스트용, 필요에 따라 도메인 제한)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # 실제 운영 시 특정 도메인만 허용하는 게 안전
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
 @app.get("/health")
-async def health_check():
-    """간단한 헬스 체크 엔드포인트."""
+def health():
     return {"status": "ok"}
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)
-async def analyze(req: AnalyzeRequest):
-    """사용자 발화 + 현재 상태를 받아 LLM으로 의도 분석을 수행합니다."""
-    result = analyze_with_llm(req)
-    # FastAPI가 Pydantic 모델을 알아서 JSON으로 변환해 주지만,
-    # 명시적으로 JSONResponse를 사용해도 됩니다.
-    return JSONResponse(content=result.model_dump())
+def analyze(req: AnalyzeRequest):
+    """
+    React(STT 처리 완료 텍스트) -> Spring -> Python 으로 들어오는 메인 엔드포인트.
+    """
+    # 여기서 req.text, req.scene, req.cart, req.menu를 LLM에 넘겨 분석
+    result = call_llm(req)
+    return result
