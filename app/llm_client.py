@@ -1,14 +1,23 @@
 # app/llm_client.py
 import os
 import json
-from typing import List
+import logging
+from typing import List, Set
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 
-from .models import AnalyzeRequest, AnalyzeResponse, MenuItem, KioskAction
+from .models import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    MenuItem,
+    KioskAction,
+)
 
-# 🔹 여기서 .env를 먼저 읽어온다
+# 🔹 로거 설정 (상위에서 설정하면 그걸 따라감)
+logger = logging.getLogger(__name__)
+
+# 🔹 .env 로딩 (OPENAI_API_KEY)
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -17,6 +26,7 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 
+# 🔹 기본 사용할 모델 (필요시 .env에서 OPENAI_MODEL=gpt-4.1 등으로 교체 가능)
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
 SYSTEM_PROMPT = """
@@ -107,7 +117,12 @@ SYSTEM_PROMPT = """
 """
 
 
+# ======================================
+# 내부 Helper 함수들
+# ======================================
+
 def _format_cart(req: AnalyzeRequest) -> str:
+    """LLM에게 보여줄 장바구니 요약 문자열."""
     if not req.cart.items:
         return "현재 장바구니는 비어 있습니다."
     lines = []
@@ -139,6 +154,7 @@ def _format_menu(menu: List[MenuItem], limit: int = 40) -> str:
 
 
 def build_messages(req: AnalyzeRequest):
+    """OpenAI ChatCompletion에 넘길 messages 구성."""
     cart_str = _format_cart(req)
     menu_str = _format_menu(req.menu)
 
@@ -165,40 +181,123 @@ def build_messages(req: AnalyzeRequest):
     return messages
 
 
-def call_llm(req: AnalyzeRequest) -> AnalyzeResponse:
-    messages = build_messages(req)
-
-    completion = client.chat.completions.create(
-        model=DEFAULT_MODEL,
-        response_format={"type": "json_object"},
-        messages=messages,
-        temperature=0.3,
+def _build_safe_fallback_response(req: AnalyzeRequest) -> AnalyzeResponse:
+    """
+    LLM 호출 실패 / 파싱 실패 등 예외 상황에서 사용할 안전한 기본 응답.
+    """
+    return AnalyzeResponse(
+        assistant_text="죄송합니다, 잠시 오류가 발생했어요. 다시 한 번만 말씀해 주시겠어요?",
+        actions=[
+            KioskAction(type="NONE", menuId=None, qty=1, customize=None)
+        ],
+        should_finish=False,
+        next_scene=req.scene,
     )
 
-    content = completion.choices[0].message.content
 
-    # JSON 파싱 + 최소한의 방어 로직
+def _normalize_actions(raw_actions, valid_menu_ids: Set[str], current_scene: str):
+    """
+    LLM이 반환한 actions 리스트를 검증/보정한다.
+    - type이 이상하면 NONE으로
+    - menuId가 유효하지 않은데 ADD/REMOVE/CUSTOMIZE면 NONE으로 다운그레이드
+    """
+    default_action = {"type": "NONE", "menuId": None, "qty": 1, "customize": None}
+
+    # actions 기본값
+    if not isinstance(raw_actions, list) or len(raw_actions) == 0:
+        return [default_action]
+
+    valid_types = {"ADD_ITEM", "REMOVE_ITEM", "CUSTOMIZE", "NONE"}
+    fixed_actions = []
+
+    for a in raw_actions:
+        if not isinstance(a, dict):
+            fixed_actions.append(default_action)
+            continue
+
+        t = a.get("type")
+        if t not in valid_types:
+            t = "NONE"
+
+        menu_id = a.get("menuId")
+        qty = a.get("qty", 1)
+        customize = a.get("customize")
+
+        # menuId가 필요한 타입인데 유효한 ID가 아니면 NONE으로 다운그레이드
+        if t in {"ADD_ITEM", "REMOVE_ITEM", "CUSTOMIZE"}:
+            if menu_id not in valid_menu_ids:
+                fixed_actions.append(default_action)
+                continue
+
+        fixed_actions.append(
+            {
+                "type": t,
+                "menuId": menu_id if t != "NONE" else None,
+                "qty": qty,
+                "customize": customize,
+            }
+        )
+
+    return fixed_actions
+
+
+# ======================================
+# 외부에 노출되는 주요 함수
+# ======================================
+
+def call_llm(req: AnalyzeRequest) -> AnalyzeResponse:
+    """
+    /analyze 엔드포인트에서 사용하는 핵심 LLM 호출 함수.
+    - 프롬프트 생성
+    - OpenAI 호출
+    - JSON 파싱
+    - actions 검증/보정
+    - 예외/에러 시 안전한 fallback 응답
+    """
+
+    messages = build_messages(req)
+    logger.info(f"[AI-REQ] scene={req.scene}, text={req.text}")
+
+    try:
+        completion = client.chat.completions.create(
+            model=DEFAULT_MODEL,
+            response_format={"type": "json_object"},
+            messages=messages,
+            temperature=0.3,
+            timeout=10,  # 초 단위, 필요시 조정
+        )
+        content = completion.choices[0].message.content
+        logger.debug(f"[AI-RAW] {content}")
+    except OpenAIError as e:
+        logger.error(f"[AI-ERROR] OpenAIError: {e}")
+        return _build_safe_fallback_response(req)
+    except Exception as e:
+        logger.error(f"[AI-ERROR] Unexpected error: {e}")
+        return _build_safe_fallback_response(req)
+
+    # JSON 파싱
     try:
         data = json.loads(content)
     except json.JSONDecodeError:
-        # 만약 모델이 이상한 응답을 하면, 안전한 기본 응답
-        data = {
-            "assistant_text": "죄송합니다. 다시 한 번만 말씀해 주시겠어요?",
-            "actions": [
-                {"type": "NONE", "menuId": None, "qty": 1, "customize": None}
-            ],
-            "should_finish": False,
-            "next_scene": req.scene,
-        }
+        logger.error("[AI-ERROR] JSON 디코딩 실패, fallback 응답 사용")
+        return _build_safe_fallback_response(req)
 
-    # actions가 없거나 잘못되었으면 보정
-    if "actions" not in data or not isinstance(data["actions"], list):
-        data["actions"] = [
-            {"type": "NONE", "menuId": None, "qty": 1, "customize": None}
-        ]
-    # 필수 필드 보정
-    data.setdefault("assistant_text", "죄송합니다. 다시 한 번만 말씀해 주시겠어요?")
+    # 필수 필드 기본값 보정
+    data.setdefault(
+        "assistant_text",
+        "죄송합니다. 다시 한 번만 말씀해 주시겠어요?",
+    )
     data.setdefault("should_finish", False)
     data.setdefault("next_scene", req.scene)
 
+    # actions 검증/보정
+    raw_actions = data.get("actions")
+    valid_menu_ids = {m.menuId for m in req.menu}
+    data["actions"] = _normalize_actions(raw_actions, valid_menu_ids, req.scene)
+
+    logger.info(
+        f"[AI-RES] scene={req.scene}, assistant_text={data.get('assistant_text')}"
+    )
+
+    # Pydantic 모델로 최종 검증
     return AnalyzeResponse(**data)
