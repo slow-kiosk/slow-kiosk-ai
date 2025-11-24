@@ -14,7 +14,7 @@ from .models import (
     KioskAction,
 )
 
-# 🔹 로거 설정 (상위에서 기본 설정을 하면 그걸 따라감)
+# 🔹 로거 설정 (상위에서 basicConfig 해두면 stdout로 찍힘)
 logger = logging.getLogger(__name__)
 
 # 🔹 .env 로딩 (OPENAI_API_KEY, OPENAI_MODEL 등)
@@ -146,21 +146,23 @@ scene에 따라 next_scene과 assistant_text를 다음과 같이 설계하라:
     수정 과정을 거칠 수 있게 한다.
   - 결제 의사가 명확하지 않다면 should_finish는 false로 둔다.
 
+성분/영양/알레르기 응답 규칙:
+- 사용자가 "성분", "재료", "알레르기", "영양", "칼로리", "당", "나트륨" 등을 물어보면,
+  menu 항목의 ingredients_ko, kcal, protein_g, fat_g, carbs_g, sugars_g, sodium_mg,
+  allergens_ko, allergy_warning_ko, nutrition_summary_ko를 우선적으로 참고해서 답변해라.
+- CSV/데이터에 없는 항목은 임의로 지어내지 말고,
+  "해당 메뉴의 자세한 영양 정보는 준비되어 있지 않습니다."처럼 솔직하게 말하라.
+- 알레르기 관련 질문에는 가능하면 allergy_warning_ko 내용을 활용하여
+  "밀, 우유, 계란, 대두를 함유하고 있어 관련 알레르기가 있으시면 섭취를 피하시는 것이 좋습니다."
+  같은 주의 문장을 함께 포함하라.
+- 여러 메뉴를 비교해달라고 하면 kcal, sugars_g, sodium_mg 등을 기반으로
+  상대적으로 가벼운/무거운 메뉴를 설명하되, 어디까지나 안내용 설명임을 전제로 말하라.
+
 재료 정보 활용 방법:
 - 각 메뉴에는 ingredients_ko (재료 목록), customizable_ko (조절 가능한 항목)가 있을 수 있다.
 - 사용자가 "피클 빼줘", "양파 많이", "케첩 추가해줘" 라고 말하면,
-  - 현재 선택된 메뉴나 방금 추가하려는 메뉴를 기준으로
-  - CUSTOMIZE 액션을 만들어라.
-    예:
-    {
-      "type": "CUSTOMIZE",
-      "menuId": "B001",
-      "qty": 1,
-      "customize": {
-        "add": ["케첩"],
-        "remove": ["피클"]
-      }
-    }
+  현재 선택된 메뉴나 방금 추가하려는 메뉴를 기준으로
+  CUSTOMIZE 액션을 만들어라.
 
 기타 주의사항:
 - menu 배열에 없는 menuId를 사용하면 안 된다.
@@ -192,17 +194,34 @@ def _format_menu(menu: List[MenuItem], limit: int = 40) -> str:
     너무 길어지지 않도록 최대 limit개까지만 보여줌.
     """
     lines = []
-    for i, m in enumerate(menu[:limit]):
+    for m in menu[:limit]:
         parts = [f"[{m.menuId}] {m.name} / {m.category} / {m.price}원"]
+
+        # 칼로리 간단 표기
+        if m.kcal is not None:
+            parts.append(f"{m.kcal}kcal")
+
         if m.ingredients_ko:
             parts.append(f"재료: {m.ingredients_ko}")
+
         if m.customizable_ko:
             parts.append(f"조절 가능: {m.customizable_ko}")
+
+        if m.allergens_ko:
+            parts.append(f"알레르기: {m.allergens_ko}")
+
+        # 필요하면 한 줄 영양 요약 (길면 빼도 됨)
+        if m.nutrition_summary_ko:
+            parts.append(f"영양요약: {m.nutrition_summary_ko}")
+
         if m.tags:
             parts.append("태그: " + ", ".join(m.tags))
+
         lines.append(" / ".join(parts))
+
     if len(menu) > limit:
         lines.append(f"... (총 {len(menu)}개 메뉴 중 {limit}개만 표시)")
+
     return "\n".join(lines)
 
 
