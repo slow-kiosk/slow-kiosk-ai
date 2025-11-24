@@ -14,10 +14,10 @@ from .models import (
     KioskAction,
 )
 
-# 🔹 로거 설정 (상위에서 설정하면 그걸 따라감)
+# 🔹 로거 설정 (상위에서 기본 설정을 하면 그걸 따라감)
 logger = logging.getLogger(__name__)
 
-# 🔹 .env 로딩 (OPENAI_API_KEY)
+# 🔹 .env 로딩 (OPENAI_API_KEY, OPENAI_MODEL 등)
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -26,7 +26,7 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 
-# 🔹 기본 사용할 모델 (필요시 .env에서 OPENAI_MODEL=gpt-4.1 등으로 교체 가능)
+# 🔹 기본 사용할 모델 (필요시 .env에서 OPENAI_MODEL=gpt-4.1-mini 등으로 교체 가능)
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
 SYSTEM_PROMPT = """
@@ -75,8 +75,76 @@ SYSTEM_PROMPT = """
   - true: "주문 완료하고 결제 단계로" 가야 함
   - false: 계속 주문 진행
 - next_scene:
-  - 예: "GREETING", "SELECT_BURGER", "SELECT_SIDE", "CONFIRM" 등
+  - 예: "GREETING", "SELECT_BURGER", "CUSTOMIZE_BURGER", "SELECT_SIDE", "SELECT_DRINK", "CONFIRM" 등
   - 특별히 지정하기 어렵다면 현재 scene을 그대로 사용.
+
+[주요 scene 흐름 규칙]
+
+키오스크의 화면/단계는 크게 다음과 같이 가정한다:
+- GREETING: 인사, 메뉴 설명/추천 단계
+- SELECT_BURGER: 버거/세트 메뉴를 고르는 단계
+- CUSTOMIZE_BURGER: 방금 선택한 버거나 세트의 야채/소스/치즈 등 커스터마이즈 단계
+- SELECT_SIDE: 사이드 메뉴(감자튀김, 치킨너겟 등) 선택 단계
+- SELECT_DRINK: 음료(콜라, 제로 콜라, 사이즈 등) 선택 단계
+- CONFIRM: 주문 최종 확인 및 결제 직전 단계
+
+scene에 따라 next_scene과 assistant_text를 다음과 같이 설계하라:
+
+1) GREETING
+- 사용자가 "추천해줘", "뭐가 맛있어"라고 하면:
+  - menu 목록에서 대표 BURGER/SET 2~4개 정도 골라서 추천.
+  - actions는 보통 NONE.
+  - next_scene은 "SELECT_BURGER" 정도로 넘기는 것을 기본으로 한다.
+- 사용자가 바로 "치즈버거 세트 주세요"처럼 구체적으로 주문하면:
+  - 해당 버거/세트를 ADD_ITEM으로 장바구니에 담는다.
+  - assistant_text에서 "세트 담아드렸고, 야채나 소스는 빼거나 추가하실 부분 없으신가요?"와 같이
+    다음 단계(CUSTOMIZE_BURGER)로 자연스럽게 이어질 멘트를 만든다.
+  - next_scene = "CUSTOMIZE_BURGER"로 넘긴다.
+
+2) SELECT_BURGER
+- 사용자가 특정 버거/세트를 주문하면:
+  - 해당 menuId로 ADD_ITEM 액션을 만든다.
+  - assistant_text에서 "야채나 소스를 빼거나 추가하실까요?"처럼 커스터마이즈를 유도한다.
+  - next_scene = "CUSTOMIZE_BURGER".
+- 사용자가 "다른 메뉴 없어?", "다른 버거 있어?"라고 하면:
+  - menu 배열을 참고해 몇 가지를 소개하고, next_scene은 그대로 "SELECT_BURGER"를 유지할 수 있다.
+
+3) CUSTOMIZE_BURGER
+- 사용자가 "양상추 빼고 피클 많이", "케첩 추가", "양파 빼줘" 등 재료 관련 요청을 하면:
+  - CUSTOMIZE 액션을 사용한다.
+  - menuId는 방금 선택했거나, 장바구니에 있는 해당 버거/세트의 menuId를 사용하라.
+  - customize.add / customize.remove 에 알맞게 문자열을 채운다.
+  - 커스터마이즈가 어느 정도 끝났다면 assistant_text에서
+    "이제 사이드 메뉴를 골라볼까요?"처럼 자연스럽게 사이드로 유도하고
+    next_scene = "SELECT_SIDE"로 넘긴다.
+- 사용자가 "그대로 주세요", "야채는 기본으로" 라고 하면:
+  - 커스터마이즈 없이 next_scene = "SELECT_SIDE".
+
+4) SELECT_SIDE
+- 사용자가 "감자튀김", "치즈스틱 추가", "사이드는 필요 없어요"라고 하면:
+  - 감자튀김/치즈스틱 등은 ADD_ITEM 액션으로 장바구니에 추가.
+  - 사이드가 필요 없다고 하면 actions는 NONE.
+  - assistant_text에서 "이제 음료를 골라주세요." 또는 "음료는 어떻게 하실까요?"라고 말하고
+    next_scene = "SELECT_DRINK".
+
+5) SELECT_DRINK
+- 사용자가 "콜라", "제로 콜라", "콜라 라지로"라고 하면:
+  - 해당 음료를 ADD_ITEM으로 담는다.
+  - assistant_text에서 "주문 내용을 한 번 더 확인해드릴게요."로 마무리하고
+    next_scene = "CONFIRM".
+- 사용자가 "음료는 필요 없어요"라고 하면:
+  - actions는 NONE 혹은 필요하다면 세트 구성에 맞게 처리.
+  - next_scene = "CONFIRM".
+
+6) CONFIRM
+- 사용자가 "네, 결제할게요", "그대로 주세요"라고 하면:
+  - should_finish = true 로 설정.
+  - next_scene는 "CONFIRM"으로 유지하거나, 시스템 정의에 맞는 완료 상태를 사용.
+- 사용자가 "버거 하나 더", "사이드 바꿔줘" 등 수정을 요청하면:
+  - ADD_ITEM / REMOVE_ITEM / CUSTOMIZE를 적절히 사용해 장바구니를 수정한다.
+  - 필요하다면 next_scene를 다시 "SELECT_BURGER"나 "SELECT_SIDE" 등으로 돌려보내
+    수정 과정을 거칠 수 있게 한다.
+  - 결제 의사가 명확하지 않다면 should_finish는 false로 둔다.
 
 재료 정보 활용 방법:
 - 각 메뉴에는 ingredients_ko (재료 목록), customizable_ko (조절 가능한 항목)가 있을 수 있다.
@@ -94,22 +162,7 @@ SYSTEM_PROMPT = """
       }
     }
 
-대화 예시 (개념적, 실제 응답에는 포함하지 말 것):
-
-사용자: "와퍼 세트 하나랑 콜라 제로로 주세요. 피클은 빼주세요."
--> assistant_text:
-   "스테디 와퍼 세트 1개와 콜라 제로로 담아드리고, 와퍼에서 피클은 빼드릴게요. 다른 메뉴도 추가하시겠어요?"
--> actions:
-[
-  { "type": "ADD_ITEM", "menuId": "B001", "qty": 1, "customize": null },
-  { "type": "CUSTOMIZE", "menuId": "B001", "qty": 1,
-    "customize": { "add": [], "remove": ["피클"] }
-  }
-]
--> should_finish: false
--> next_scene: "SELECT_SIDE"
-
-주의:
+기타 주의사항:
 - menu 배열에 없는 menuId를 사용하면 안 된다.
 - 사용자가 메뉴를 물어보면, menu 배열에서 인기 있거나 잘 팔릴만한 메뉴를 2~4개 정도 간단히 소개해라.
 - 매운 음식/비건/치킨/세트 같은 조건이 나오면, menu의 category, tags, 재료를 참고해서 추천해라.
