@@ -18,7 +18,7 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 # 🔹 .env 로딩 (OPENAI_API_KEY, OPENAI_MODEL 등)
-load_dotenv()
+load_dotenv(override=True)
 
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
