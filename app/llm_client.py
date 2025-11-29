@@ -2,8 +2,7 @@
 import os
 import json
 import logging
-from typing import List, Set, Deque, Tuple
-from collections import deque
+from typing import List, Set
 
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
@@ -15,10 +14,14 @@ from .models import (
     KioskAction,
 )
 
-# 🔹 로거 설정
+# --------------------------------------------------
+# 로거 설정 (상위에서 basicConfig 해두면 stdout로 찍힘)
+# --------------------------------------------------
 logger = logging.getLogger(__name__)
 
-# 🔹 .env 로딩 (OPENAI_API_KEY, OPENAI_MODEL 등)
+# --------------------------------------------------
+# .env 로딩 (OPENAI_API_KEY, OPENAI_MODEL 등)
+# --------------------------------------------------
 load_dotenv(override=True)
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -27,12 +30,12 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 
-# 🔹 기본 사용할 모델
+# 기본 사용할 모델 (필요시 .env에서 OPENAI_MODEL=gpt-4.1-mini 등으로 교체 가능)
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
-# 🔹 최근 대화 히스토리 (user, assistant) 3턴까지 유지
-#   - 키오스크 한 세션 동안만 유지된다고 가정
-RECENT_TURNS: Deque[Tuple[str, str]] = deque(maxlen=3)
+# 한 세션에서 LLM에 넘길 최대 히스토리 턴 수
+MAX_HISTORY_TURNS = 6
+
 
 SYSTEM_PROMPT = """
 너는 한국 패스트푸드점 '슬로우버거' 키오스크의 AI 주문 도우미다.
@@ -166,22 +169,71 @@ scene에 따라 next_scene과 assistant_text를 다음과 같이 설계하라:
 [메뉴 태그(tags) 활용 가이드]
 
 - 각 메뉴에는 tags 배열이 있을 수 있다. 예:
-  - "대표메뉴"
-  - "가성비"
-  - "매운맛"
-  - "맵지않음"
-  - "아이추천"
-  - "어르신추천"
-  - "부드러운"
-  - "가벼운"
-  - "포만감"
+  - "대표메뉴": 가장 많이 팔리는 시그니처 메뉴
+  - "가성비": 가격 대비 양/구성이 좋은 메뉴
+  - "매운맛": 매운 소스나 매운 패티가 들어간 메뉴
+  - "맵지않음": 매운 것을 못 먹는 이용자에게 적합
+  - "아이추천": 어린이/청소년이 먹기 좋은, 맵지 않고 자극이 적은 메뉴
+  - "어르신추천": 부드러운 식감, 자극이 덜한 메뉴
+  - "부드러운": 치아가 약한 분도 먹기 편한 메뉴
+  - "가벼운": 칼로리/양이 상대적으로 가벼운 메뉴
+  - "포만감": 양이 많고 배가 부르게 하는 메뉴
 - 사용자의 발화에서 다음과 같은 의도가 보이면, tags/영양 정보를 참고해 1~3개 정도 추천하라.
-(이하 생략… 위에서 작성해둔 내용과 동일)
+
+  1) "아무거나", "그냥 제일 맛있는 거", "복잡해", "귀찮아"
+     - 대표메뉴/가성비 메뉴를 우선 추천 (tags에 "대표메뉴", "가성비"가 있는 메뉴)
+
+  2) "배가 너무 고프다", "양 많은 거", "든든하게"
+     - kcal, 포만감이 높은 메뉴, tags에 "포만감"이 있는 메뉴 위주로 추천
+
+  3) "입맛이 없다", "가볍게", "간단하게"
+     - tags에 "가벼운"이 있거나 칼로리가 상대적으로 낮은 메뉴 위주로 추천
+
+  4) "스트레스 받는다", "매운 거 땡긴다"
+     - tags에 "매운맛"이 있는 메뉴 위주로 추천
+
+  5) "살 덜 찌는", "다이어트", "칼로리"
+     - kcal, fat_g, sodium_mg이 상대적으로 낮은 메뉴 + 제로 음료/물 추천
+
+  6) "이가 안 좋다", "딱딱한 건 못 씹어"
+     - tags에 "부드러운", "어르신추천"이 있는 메뉴 위주로 추천
+
+  7) "아이", "손주", "학생", "어린이"가 먹는다는 표현
+     - tags에 "아이추천", "맵지않음"이 있는 메뉴 위주로 추천
+
+  8) "제일 싼", "가성비", "돈이 없다"
+     - price가 낮고 tags에 "가성비"가 있는 메뉴를 추천
+
+[모호한 질문 / 디지털 불안 응답 전략]
+
+- 사용자가 "그냥 아무거나 줘", "복잡해 죽겠네", "그냥 알아서 골라줘"라고 하면:
+  - 대표메뉴 또는 가성비 메뉴 1~2개를 추천하고,
+  - "이 중에서 하나 골라드릴까요?"처럼 선택 부담을 줄여주는 멘트를 사용하라.
+
+- "배고파 죽겠네", "양 많은 거 없어?" 라고 하면:
+  - 양이 많고 포만감 있는 버거/세트 메뉴를 추천하고,
+  - 너무 많이 담지 말고, 우선 1개 기준으로 제안한 뒤 추가 여부를 물어라.
+
+- "살 덜 찌는 거", "다이어트 중"이라고 하면:
+  - 칼로리/지방/나트륨이 낮은 쪽을 안내하고,
+  - 음료는 제로 음료나 물을 함께 제안하라.
+
+- "이거 누르면 돈 바로 나가는 거야?", "기계가 무서워"라고 하면:
+  - "지금은 메뉴만 담는 단계이고, 마지막 결제 화면에서만 실제로 결제가 된다"는 점을 분명히 말하라.
+  - 현재 장바구니 내용을 한 번 읽어준 뒤, "맞으시면 '맞아요'라고 말씀해 주세요."처럼
+    사용자가 안심하고 확인할 수 있게 안내하라.
+
+기타 주의사항:
+- menu 배열에 없는 menuId를 사용하면 안 된다.
+- 사용자가 메뉴를 물어보면, menu 배열에서 인기 있거나 잘 팔릴만한 메뉴를 2~4개 정도 간단히 소개해라.
+- 매운 음식/비건/치킨/세트 같은 조건이 나오면, menu의 category, tags, 재료를 참고해서 추천해라.
+- 사용자의 의도가 애매하면, 바로 결제 끝내지 말고 한 번 더 확인 질문을 하라.
 """
 
-# =========================
+
+# ======================================
 # 내부 Helper 함수들
-# =========================
+# ======================================
 
 def _format_cart(req: AnalyzeRequest) -> str:
     """LLM에게 보여줄 장바구니 요약 문자열."""
@@ -189,27 +241,38 @@ def _format_cart(req: AnalyzeRequest) -> str:
         return "현재 장바구니는 비어 있습니다."
     lines = []
     for ci in req.cart.items:
+        # menuId로 name 찾기
         name = next((m.name for m in req.menu if m.menuId == ci.menuId), ci.menuId)
         lines.append(f"- {name}({ci.menuId}) x {ci.qty}")
     return "\n".join(lines)
 
 
 def _format_menu(menu: List[MenuItem], limit: int = 40) -> str:
-    """LLM에게 보여줄 간단한 메뉴 요약 (최대 limit개)."""
+    """
+    LLM에게 보여줄 간단한 메뉴 요약.
+    너무 길어지지 않도록 최대 limit개까지만 보여줌.
+    """
     lines = []
     for m in menu[:limit]:
         parts = [f"[{m.menuId}] {m.name} / {m.category} / {m.price}원"]
 
-        if getattr(m, "kcal", None) is not None:
+        # 칼로리 간단 표기
+        if m.kcal is not None:
             parts.append(f"{m.kcal}kcal")
-        if getattr(m, "ingredients_ko", None):
+
+        if m.ingredients_ko:
             parts.append(f"재료: {m.ingredients_ko}")
-        if getattr(m, "customizable_ko", None):
+
+        if m.customizable_ko:
             parts.append(f"조절 가능: {m.customizable_ko}")
-        if getattr(m, "allergens_ko", None):
+
+        if m.allergens_ko:
             parts.append(f"알레르기: {m.allergens_ko}")
-        if getattr(m, "nutrition_summary_ko", None):
+
+        # 필요하면 한 줄 영양 요약
+        if m.nutrition_summary_ko:
             parts.append(f"영양요약: {m.nutrition_summary_ko}")
+
         if m.tags:
             parts.append("태그: " + ", ".join(m.tags))
 
@@ -221,31 +284,18 @@ def _format_menu(menu: List[MenuItem], limit: int = 40) -> str:
     return "\n".join(lines)
 
 
-def _build_history_block() -> str:
-    """
-    최근 3턴의 (user, assistant) 대화를 텍스트로 정리.
-    LLM이 직전 맥락을 이해할 수 있도록 system/user 프롬프트에 포함.
-    """
-    if not RECENT_TURNS:
-        return "최근 대화 기록 없음."
-
-    lines = []
-    for i, (user_text, assistant_text) in enumerate(RECENT_TURNS, start=1):
-        lines.append(f"[턴 {i}]\n사용자: {user_text}\nAI: {assistant_text}")
-    return "\n\n".join(lines)
-
-
 def build_messages(req: AnalyzeRequest):
-    """OpenAI ChatCompletion에 넘길 messages 구성 (히스토리 + 현재 발화)."""
-    history_str = _build_history_block()
+    """
+    OpenAI ChatCompletion에 넘길 messages 구성.
+    - system: 역할/규칙
+    - (선택) history: 이전 user/assistant 발화
+    - user: 이번 턴 정보(text/scene/cart/menu)
+    """
     cart_str = _format_cart(req)
     menu_str = _format_menu(req.menu)
 
     user_prompt = f"""
-[최근 대화 히스토리]
-{history_str}
-
-[이번 사용자 발화]
+[사용자 발화]
 {req.text}
 
 [현재 화면(scene)]
@@ -260,17 +310,38 @@ def build_messages(req: AnalyzeRequest):
 위 정보를 보고 JSON만 출력해라.
 """
 
-    return [
+    messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
     ]
+
+    # 🔹 직전 히스토리 (최신 N턴만 사용)
+    if req.history:
+        history_slice = req.history[-MAX_HISTORY_TURNS:]
+        for h in history_slice:
+            if h.role not in ("user", "assistant"):
+                continue
+            messages.append(
+                {
+                    "role": h.role,
+                    "content": h.content,
+                }
+            )
+
+    # 🔹 이번 턴 user
+    messages.append({"role": "user", "content": user_prompt})
+
+    return messages
 
 
 def _build_safe_fallback_response(req: AnalyzeRequest) -> AnalyzeResponse:
-    """LLM 호출 실패 / 파싱 실패 등 예외 상황에서 사용할 안전한 기본 응답."""
+    """
+    LLM 호출 실패 / 파싱 실패 등 예외 상황에서 사용할 안전한 기본 응답.
+    """
     return AnalyzeResponse(
         assistant_text="죄송합니다, 잠시 오류가 발생했어요. 다시 한 번만 말씀해 주시겠어요?",
-        actions=[KioskAction(type="NONE", menuId=None, qty=1, customize=None)],
+        actions=[
+            KioskAction(type="NONE", menuId=None, qty=1, customize=None)
+        ],
         should_finish=False,
         next_scene=req.scene,
     )
@@ -281,10 +352,11 @@ def _normalize_actions(raw_actions, valid_menu_ids: Set[str], current_scene: str
     LLM이 반환한 actions 리스트를 검증/보정한다.
     - type이 이상하면 NONE으로
     - menuId가 유효하지 않은데 ADD/REMOVE/CUSTOMIZE면 NONE으로 다운그레이드
-    - menuId는 숫자/문자 상관없이 문자열로 통일해서 비교
+    - menuId 숫자 vs 문자열 이슈를 방지하기 위해 무조건 문자열로 변환 후 비교
     """
     default_action = {"type": "NONE", "menuId": None, "qty": 1, "customize": None}
 
+    # actions 기본값
     if not isinstance(raw_actions, list) or len(raw_actions) == 0:
         return [default_action]
 
@@ -300,16 +372,20 @@ def _normalize_actions(raw_actions, valid_menu_ids: Set[str], current_scene: str
         if t not in valid_types:
             t = "NONE"
 
-        # 🔹 menuId를 무조건 문자열로 변환
+        # 🔹 핵심: menuId를 무조건 문자열로 변환
         raw_menu_id = a.get("menuId")
         menu_id = str(raw_menu_id) if raw_menu_id is not None else None
 
         qty = a.get("qty", 1)
         customize = a.get("customize")
 
+        # menuId가 필요한 타입인데 유효한 ID가 아니면 NONE으로 다운그레이드
         if t in {"ADD_ITEM", "REMOVE_ITEM", "CUSTOMIZE"}:
             if menu_id not in valid_menu_ids:
-                # logger.warning(f"Invalid Menu ID filtered: {menu_id} (raw: {raw_menu_id})")
+                logger.warning(
+                    f"[AI-ACTION] Invalid menuId filtered: raw={raw_menu_id}, "
+                    f"menu_id(str)={menu_id}, valid_menu_ids={list(valid_menu_ids)[:5]}..."
+                )
                 fixed_actions.append(default_action)
                 continue
 
@@ -325,20 +401,20 @@ def _normalize_actions(raw_actions, valid_menu_ids: Set[str], current_scene: str
     return fixed_actions
 
 
-# =========================
+# ======================================
 # 외부에 노출되는 주요 함수
-# =========================
+# ======================================
 
 def call_llm(req: AnalyzeRequest) -> AnalyzeResponse:
     """
     /analyze 엔드포인트에서 사용하는 핵심 LLM 호출 함수.
-    - 프롬프트 생성 (히스토리 포함)
+    - 프롬프트 생성
     - OpenAI 호출
     - JSON 파싱
     - actions 검증/보정
     - 예외/에러 시 안전한 fallback 응답
-    - should_finish가 true이면 히스토리 초기화
     """
+
     messages = build_messages(req)
     logger.info(f"[AI-REQ] scene={req.scene}, text={req.text}")
 
@@ -348,7 +424,7 @@ def call_llm(req: AnalyzeRequest) -> AnalyzeResponse:
             response_format={"type": "json_object"},
             messages=messages,
             temperature=0.3,
-            timeout=10,
+            timeout=10,  # 초 단위, 필요시 조정
         )
         content = completion.choices[0].message.content
         logger.debug(f"[AI-RAW] {content}")
@@ -379,18 +455,9 @@ def call_llm(req: AnalyzeRequest) -> AnalyzeResponse:
     valid_menu_ids = {m.menuId for m in req.menu}
     data["actions"] = _normalize_actions(raw_actions, valid_menu_ids, req.scene)
 
-    assistant_text = data.get("assistant_text")
-    logger.info(f"[AI-RES] scene={req.scene}, assistant_text={assistant_text}")
+    logger.info(
+        f"[AI-RES] scene={req.scene}, assistant_text={data.get('assistant_text')}"
+    )
 
-    # 🔹 히스토리 업데이트 (이번 턴 기록)
-    try:
-        RECENT_TURNS.append((req.text, assistant_text))
-    except Exception as e:
-        logger.warning(f"[AI-HISTORY] update failed: {e}")
-
-    # 🔹 주문 완료 시 히스토리 초기화 (고객 한 명 세션 끝났다고 가정)
-    if data.get("should_finish"):
-        RECENT_TURNS.clear()
-        logger.info("[AI-HISTORY] cleared due to should_finish=True")
-
+    # Pydantic 모델로 최종 검증
     return AnalyzeResponse(**data)

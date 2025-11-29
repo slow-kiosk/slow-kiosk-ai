@@ -1,8 +1,10 @@
 # app/models.py
-from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
+from pydantic import BaseModel, Field
 
-# 어떤 액션들을 지원할지 정의
+# --------------------------------------
+# 액션 타입 정의
+# --------------------------------------
 ActionType = Literal["ADD_ITEM", "REMOVE_ITEM", "CUSTOMIZE", "NONE"]
 
 
@@ -32,6 +34,9 @@ class KioskAction(BaseModel):
     customize: Optional[Customization] = None
 
 
+# --------------------------------------
+# 장바구니 관련
+# --------------------------------------
 class CartItem(BaseModel):
     menuId: str
     qty: int = 1
@@ -41,53 +46,58 @@ class Cart(BaseModel):
     items: List[CartItem] = Field(default_factory=list)
 
 
+# --------------------------------------
+# 메뉴 정보 (CSV 컬럼 매핑)
+# --------------------------------------
 class MenuItem(BaseModel):
     """
     Spring/React에서 내려주는 메뉴 1개 스키마.
-    CSV의 컬럼이랑 맞춰서, 있는 것만 채워서 넘기면 됨.
+    CSV의 컬럼이랑 맞춰서 맞는 것만 쓰면 됨.
     """
     menuId: str
     name: str           # name_ko 사용해서 채우면 됨
-    category: str       # BURGER / SET / SIDE / DRINK / DESSERT 등
-    price: int          # 원 단위 가격
+    category: str
+    price: int
 
-    # 태그 (대표메뉴, 매운맛, 치킨, 가성비 등)
+    # 태그: "대표메뉴", "가성비", "매운맛", "맵지않음", "아이추천", "어르신추천", ...
     tags: List[str] = Field(default_factory=list)
 
-    # 재료/커스터마이즈 관련
+    # 재료/커스터마이즈
     ingredients_ko: Optional[str] = None      # "참깨빵, 양상추, 양파, 피클, 소고기 패티, ..."
     customizable_ko: Optional[str] = None     # "피클, 양파, 소스, 치즈, 베이컨"
 
-    # 🔹 영양 정보 (있으면 사용, 없으면 None)
-    kcal: Optional[int] = None                # 칼로리(kcal)
-    protein_g: Optional[float] = None         # 단백질(g)
-    fat_g: Optional[float] = None             # 지방(g)
-    saturated_fat_g: Optional[float] = None   # 포화지방(g)
-    carbs_g: Optional[float] = None           # 탄수화물(g)
-    sugars_g: Optional[float] = None          # 당류(g)
-    sodium_mg: Optional[int] = None           # 나트륨(mg)
+    # 영양 정보
+    kcal: Optional[float] = None
+    protein_g: Optional[float] = None
+    fat_g: Optional[float] = None
+    carbs_g: Optional[float] = None
+    sugars_g: Optional[float] = None
+    sodium_mg: Optional[float] = None
 
-    # 🔹 알레르기 정보 (텍스트 + 플래그)
-    allergens_ko: Optional[str] = None        # "밀, 대두, 우유, 계란, 소고기" 등
-    allergens_en: Optional[str] = None        # "wheat, soy, milk, egg, beef"
+    # 알레르기/경고
+    allergens_ko: Optional[str] = None           # "밀, 우유, 계란, 대두 함유"
+    allergy_warning_ko: Optional[str] = None     # "우유, 밀 알레르기 있는 분은 섭취에 주의하세요."
 
-    allergen_wheat: Optional[bool] = None
-    allergen_egg: Optional[bool] = None
-    allergen_milk: Optional[bool] = None
-    allergen_soy: Optional[bool] = None
-    allergen_peanut: Optional[bool] = None
-    allergen_nut: Optional[bool] = None
-    allergen_fish: Optional[bool] = None
-    allergen_shellfish: Optional[bool] = None
-    allergen_pork: Optional[bool] = None
-    allergen_beef: Optional[bool] = None
-    allergen_shrimp: Optional[bool] = None
-
-    # 🔹 한 줄 요약
-    nutrition_summary_ko: Optional[str] = None  # "1회 제공량 기준 ~kcal, 단백질 ~g ..." 등
-    allergy_warning_ko: Optional[str] = None    # "밀, 우유, 계란 포함, 알레르기 주의" 등
+    # 한 줄 영양 요약
+    nutrition_summary_ko: Optional[str] = None   # "단백질이 풍부하고, 칼로리는 중간 수준입니다."
 
 
+# --------------------------------------
+# 대화 히스토리 (프론트/백이 넘겨줌)
+# --------------------------------------
+class HistoryTurn(BaseModel):
+    """
+    이전 턴 대화 내용.
+    - role: "user" (사용자 발화) / "assistant" (AI가 말한 문장)
+    - content: 그때 실제로 보이거나 들려줬던 텍스트
+    """
+    role: Literal["user", "assistant"]
+    content: str
+
+
+# --------------------------------------
+# /analyze 요청/응답 모델
+# --------------------------------------
 class AnalyzeRequest(BaseModel):
     """
     React → Spring → Python 으로 들어오는 Body 형식
@@ -96,6 +106,12 @@ class AnalyzeRequest(BaseModel):
     scene: str                    # 현재 화면/상황(예: GREETING, SELECT_BURGER 등)
     cart: Cart                    # 현재 장바구니 상태
     menu: List[MenuItem]          # 현재 화면에서 선택 가능한 메뉴 리스트
+
+    # 🔹 추가: 최근 대화 히스토리 (optional)
+    history: List[HistoryTurn] = Field(
+        default_factory=list,
+        description="이전 user/assistant 발화 히스토리 (최신이 뒤에 오도록)"
+    )
 
 
 class AnalyzeResponse(BaseModel):
